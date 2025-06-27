@@ -1,0 +1,932 @@
+// import React, { useState, useRef, useEffect } from "react";
+// import { useParams } from "react-router-dom";
+// import Editor from "@monaco-editor/react";
+// import {
+//   Play,
+//   Save,
+//   Copy,
+//   MessageSquare,
+//   Send,
+//   Loader2,
+//   Settings,
+//   FileText,
+// } from "lucide-react";
+// import { useTheme } from "../contexts/ThemeContext";
+// import axios from "axios";
+// import toast from "react-hot-toast";
+
+// const CodeEditor: React.FC = () => {
+//   const { id } = useParams();
+//   const { theme } = useTheme();
+//   const [language, setLanguage] = useState("javascript");
+//   const [code, setCode] = useState(
+//     '// Welcome to CodeForge!\n// Start typing your code here...\n\nconsole.log("Hello, World!");'
+//   );
+//   const [input, setInput] = useState("");
+//   const [output, setOutput] = useState("");
+//   const [isRunning, setIsRunning] = useState(false);
+//   const [chatMessages, setChatMessages] = useState<
+//     Array<{
+//       id: string;
+//       sender: "user" | "ai";
+//       message: string;
+//       timestamp: Date;
+//     }>
+//   >([]);
+//   const [chatInput, setChatInput] = useState("");
+//   const [isChatLoading, setIsChatLoading] = useState(false);
+//   const [showChat, setShowChat] = useState(false);
+//   const [showSettings, setShowSettings] = useState(false);
+//   const [fileName, setFileName] = useState("untitled");
+//   const [fileDescription, setFileDescription] = useState("");
+//   const [isSaving, setIsSaving] = useState(false);
+
+//   const editorRef = useRef<any>(null);
+//   const chatEndRef = useRef<HTMLDivElement>(null);
+
+//   const languages = [
+//     { id: "javascript", name: "JavaScript", extension: ".js" },
+//     { id: "python", name: "Python", extension: ".py" },
+//     { id: "java", name: "Java", extension: ".java" },
+//     { id: "cpp", name: "C++", extension: ".cpp" },
+//     { id: "c", name: "C", extension: ".c" },
+//     { id: "csharp", name: "C#", extension: ".cs" },
+//     { id: "go", name: "Go", extension: ".go" },
+//     { id: "rust", name: "Rust", extension: ".rs" },
+//     { id: "php", name: "PHP", extension: ".php" },
+//     { id: "ruby", name: "Ruby", extension: ".rb" },
+//   ];
+
+//   const defaultCode = {
+//     javascript:
+//       '// Welcome to CodeForge!\n// Start typing your code here...\n\nconsole.log("Hello, World!");',
+//     python:
+//       '# Welcome to CodeForge!\n# Start typing your code here...\n\nprint("Hello, World!")',
+//     java: 'public class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}',
+//     cpp: '#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Hello, World!" << endl;\n    return 0;\n}',
+//     c: '#include <stdio.h>\n\nint main() {\n    printf("Hello, World!\\n");\n    return 0;\n}',
+//     csharp:
+//       'using System;\n\nclass Program {\n    static void Main() {\n        Console.WriteLine("Hello, World!");\n    }\n}',
+//     go: 'package main\n\nimport "fmt"\n\nfunc main() {\n    fmt.Println("Hello, World!")\n}',
+//     rust: 'fn main() {\n    println!("Hello, World!");\n}',
+//     php: '<?php\necho "Hello, World!";\n?>',
+//     ruby: 'puts "Hello, World!"',
+//   };
+
+//   useEffect(() => {
+//     if (chatEndRef.current) {
+//       chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+//     }
+//   }, [chatMessages]);
+
+//   useEffect(() => {
+//     if (id) {
+//       loadFile(id);
+//     }
+//   }, [id]);
+
+//   const loadFile = async (fileId: string) => {
+//     try {
+//       const response = await axios.get(`/files/${fileId}`);
+//       const file = response.data;
+//       setFileName(file.title);
+//       setFileDescription(file.description);
+//       setLanguage(file.language);
+//       setCode(file.code);
+//       setInput(file.input || "");
+//     } catch (error) {
+//       toast.error("Failed to load file");
+//     }
+//   };
+
+//   const handleLanguageChange = (newLanguage: string) => {
+//     setLanguage(newLanguage);
+//     setCode(defaultCode[newLanguage as keyof typeof defaultCode] || "");
+//   };
+
+//   const runCode = async () => {
+//     if (!code.trim()) {
+//       toast.error("Please enter some code to run");
+//       return;
+//     }
+
+//     setIsRunning(true);
+//     setOutput("Running...");
+
+//     try {
+//       const response = await axios.post("/code/execute", {
+//         code,
+//         language,
+//         input,
+//       });
+
+//       if (response.data.success) {
+//         setOutput(
+//           response.data.output || "Code executed successfully (no output)"
+//         );
+//       } else {
+//         setOutput(`Error: ${response.data.error}`);
+//       }
+//     } catch (error: any) {
+//       setOutput(
+//         `Execution failed: ${error.response?.data?.error || error.message}`
+//       );
+//       toast.error("Failed to execute code");
+//     } finally {
+//       setIsRunning(false);
+//     }
+//   };
+
+//   const saveFile = async () => {
+//     if (!fileName.trim()) {
+//       toast.error("Please enter a file name");
+//       return;
+//     }
+
+//     setIsSaving(true);
+//     try {
+//       const fileData = {
+//         title: fileName,
+//         description: fileDescription,
+//         language,
+//         code,
+//         input,
+//       };
+
+//       if (id) {
+//         await axios.put(`/files/${id}`, fileData);
+//         toast.success("File updated successfully");
+//       } else {
+//         const response = await axios.post("/files", fileData);
+//         toast.success("File saved successfully");
+//         // Optionally update URL to include file ID
+//         window.history.replaceState(null, "", `/editor/${response.data._id}`);
+//       }
+//     } catch (error) {
+//       toast.error("Failed to save file");
+//     } finally {
+//       setIsSaving(false);
+//     }
+//   };
+
+//   const copyCode = () => {
+//     navigator.clipboard.writeText(code);
+//     toast.success("Code copied to clipboard");
+//   };
+
+//   const sendChatMessage = async () => {
+//     if (!chatInput.trim()) return;
+
+//     const userMessage = {
+//       id: Date.now().toString(),
+//       sender: "user" as const,
+//       message: chatInput,
+//       timestamp: new Date(),
+//     };
+
+//     setChatMessages((prev) => [...prev, userMessage]);
+//     setChatInput("");
+//     setIsChatLoading(true);
+
+//     try {
+//       const response = await axios.post("/ai/chat", {
+//         message: chatInput,
+//       });
+
+//       const aiMessage = {
+//         id: (Date.now() + 1).toString(),
+//         sender: "ai" as const,
+//         message: response.data.response,
+//         timestamp: new Date(),
+//       };
+
+//       setChatMessages((prev) => [...prev, aiMessage]);
+//     } catch (error) {
+//       toast.error("Failed to get AI response");
+//     } finally {
+//       setIsChatLoading(false);
+//     }
+//   };
+
+//   return (
+//     <div className="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+//       {/* Header */}
+//       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+//         <div className="flex items-center justify-between">
+//           <div className="flex items-center space-x-4">
+//             <div className="flex items-center space-x-2">
+//               <FileText className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+//               <input
+//                 type="text"
+//                 value={fileName}
+//                 onChange={(e) => setFileName(e.target.value)}
+//                 className="bg-transparent text-lg font-medium text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1"
+//                 placeholder="File name"
+//               />
+//             </div>
+//             <select
+//               value={language}
+//               onChange={(e) => handleLanguageChange(e.target.value)}
+//               className="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+//             >
+//               {languages.map((lang) => (
+//                 <option key={lang.id} value={lang.id}>
+//                   {lang.name}
+//                 </option>
+//               ))}
+//             </select>
+//           </div>
+
+//           <div className="flex items-center space-x-2">
+//             <button
+//               onClick={() => setShowSettings(!showSettings)}
+//               className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+//             >
+//               <Settings className="h-5 w-5" />
+//             </button>
+//             <button
+//               onClick={() => setShowChat(!showChat)}
+//               className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+//             >
+//               <MessageSquare className="h-5 w-5" />
+//             </button>
+//             <button
+//               onClick={copyCode}
+//               className="flex items-center space-x-2 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+//             >
+//               <Copy className="h-4 w-4" />
+//               <span className="text-sm">Copy</span>
+//             </button>
+//             <button
+//               onClick={saveFile}
+//               disabled={isSaving}
+//               className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+//             >
+//               {isSaving ? (
+//                 <Loader2 className="h-4 w-4 animate-spin" />
+//               ) : (
+//                 <Save className="h-4 w-4" />
+//               )}
+//               <span className="text-sm">{isSaving ? "Saving..." : "Save"}</span>
+//             </button>
+//             <button
+//               onClick={runCode}
+//               disabled={isRunning}
+//               className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+//             >
+//               {isRunning ? (
+//                 <Loader2 className="h-4 w-4 animate-spin" />
+//               ) : (
+//                 <Play className="h-4 w-4" />
+//               )}
+//               <span className="text-sm">
+//                 {isRunning ? "Running..." : "Run"}
+//               </span>
+//             </button>
+//           </div>
+//         </div>
+//       </div>
+
+//       {/* Settings Panel */}
+//       {showSettings && (
+//         <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+//           <div className="max-w-md">
+//             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+//               Description
+//             </label>
+//             <textarea
+//               value={fileDescription}
+//               onChange={(e) => setFileDescription(e.target.value)}
+//               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+//               rows={2}
+//               placeholder="Enter file description..."
+//             />
+//           </div>
+//         </div>
+//       )}
+
+//       {/* Main Content */}
+//       <div className="flex-1 flex">
+//         {/* Code Editor */}
+//         <div className="flex-1 flex flex-col">
+//           <div className="flex-1 border-r border-gray-200 dark:border-gray-700">
+//             <Editor
+//               height="100%"
+//               language={language === "cpp" ? "cpp" : language}
+//               value={code}
+//               onChange={(value) => setCode(value || "")}
+//               theme={theme === "dark" ? "vs-dark" : "vs-light"}
+//               options={{
+//                 minimap: { enabled: false },
+//                 fontSize: 14,
+//                 lineNumbers: "on",
+//                 wordWrap: "on",
+//                 automaticLayout: true,
+//                 scrollBeyondLastLine: false,
+//                 smoothScrolling: true,
+//                 cursorBlinking: "smooth",
+//                 renderWhitespace: "boundary",
+//                 bracketPairColorization: { enabled: true },
+//               }}
+//               onMount={(editor) => {
+//                 editorRef.current = editor;
+//               }}
+//             />
+//           </div>
+
+//           {/* Input/Output Section */}
+//           <div className="h-64 border-t border-gray-200 dark:border-gray-700 flex">
+//             <div className="flex-1 flex flex-col border-r border-gray-200 dark:border-gray-700">
+//               <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+//                 <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+//                   Input
+//                 </h3>
+//               </div>
+//               <textarea
+//                 value={input}
+//                 onChange={(e) => setInput(e.target.value)}
+//                 className="flex-1 p-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-white resize-none focus:outline-none"
+//                 placeholder="Enter input for your program..."
+//               />
+//             </div>
+//             <div className="flex-1 flex flex-col">
+//               <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+//                 <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+//                   Output
+//                 </h3>
+//               </div>
+//               <div className="flex-1 p-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-mono text-sm overflow-auto">
+//                 <pre className="whitespace-pre-wrap">{output}</pre>
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+
+//         {/* AI Chat Sidebar */}
+//         {showChat && (
+//           <div className="w-80 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 flex flex-col">
+//             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+//               <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+//                 DSA Assistant
+//               </h3>
+//               <p className="text-sm text-gray-600 dark:text-gray-400">
+//                 Ask me anything about Data Structures & Algorithms
+//               </p>
+//             </div>
+
+//             <div className="flex-1 overflow-y-auto p-4 space-y-4">
+//               {chatMessages.length === 0 && (
+//                 <div className="text-center text-gray-500 dark:text-gray-400 py-8">
+//                   <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+//                   <p>Start a conversation with the AI assistant!</p>
+//                 </div>
+//               )}
+
+//               {chatMessages.map((message) => (
+//                 <div
+//                   key={message.id}
+//                   className={`flex ${
+//                     message.sender === "user" ? "justify-end" : "justify-start"
+//                   }`}
+//                 >
+//                   <div
+//                     className={`max-w-xs px-4 py-2 rounded-lg ${
+//                       message.sender === "user"
+//                         ? "bg-blue-600 text-white"
+//                         : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
+//                     }`}
+//                   >
+//                     <p className="text-sm whitespace-pre-wrap">
+//                       {message.message}
+//                     </p>
+//                     <p className="text-xs opacity-70 mt-1">
+//                       {message.timestamp.toLocaleTimeString()}
+//                     </p>
+//                   </div>
+//                 </div>
+//               ))}
+
+//               {isChatLoading && (
+//                 <div className="flex justify-start">
+//                   <div className="bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-2">
+//                     <div className="flex items-center space-x-2">
+//                       <Loader2 className="h-4 w-4 animate-spin" />
+//                       <span className="text-sm">AI is thinking...</span>
+//                     </div>
+//                   </div>
+//                 </div>
+//               )}
+//               <div ref={chatEndRef} />
+//             </div>
+
+//             <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+//               <div className="flex space-x-2">
+//                 <input
+//                   type="text"
+//                   value={chatInput}
+//                   onChange={(e) => setChatInput(e.target.value)}
+//                   onKeyDown={(e) => {
+//                     if (e.key === "Enter") {
+//                       sendChatMessage();
+//                     }
+//                   }}
+//                   className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+//                   placeholder="Ask about DSA..."
+//                 />
+//                 <button
+//                   onClick={sendChatMessage}
+//                   disabled={isChatLoading || !chatInput.trim()}
+//                   className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+//                 >
+//                   <Send className="h-4 w-4" />
+//                 </button>
+//               </div>
+//             </div>
+//           </div>
+//         )}
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default CodeEditor;
+
+import React, { useState, useRef, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import Editor from "@monaco-editor/react";
+import {
+  Play,
+  Save,
+  Copy,
+  MessageSquare,
+  Send,
+  Loader2,
+  Settings,
+  FileText,
+  X,
+  ChevronDown,
+} from "lucide-react";
+import { useTheme } from "../contexts/ThemeContext";
+import axios from "axios";
+import toast from "react-hot-toast";
+
+const CodeEditor: React.FC = () => {
+  const { id } = useParams();
+  const { theme } = useTheme();
+  const [language, setLanguage] = useState("javascript");
+  const [code, setCode] = useState(
+    '// Welcome to CodeForge!\n// Start typing your code here...\n\nconsole.log("Hello, World!");'
+  );
+  const [input, setInput] = useState("");
+  const [output, setOutput] = useState("");
+  const [isRunning, setIsRunning] = useState(false);
+  const [chatMessages, setChatMessages] = useState<
+    Array<{
+      id: string;
+      sender: "user" | "ai";
+      message: string;
+      timestamp: Date;
+    }>
+  >([]);
+  const [chatInput, setChatInput] = useState("");
+  const [isChatLoading, setIsChatLoading] = useState(false);
+  const [showChat, setShowChat] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [fileName, setFileName] = useState("untitled");
+  const [fileDescription, setFileDescription] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const editorRef = useRef<any>(null);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  const languages = [
+    { id: "javascript", name: "JavaScript", extension: ".js" },
+    { id: "python", name: "Python", extension: ".py" },
+    { id: "java", name: "Java", extension: ".java" },
+    { id: "cpp", name: "C++", extension: ".cpp" },
+    { id: "c", name: "C", extension: ".c" },
+    { id: "csharp", name: "C#", extension: ".cs" },
+    { id: "go", name: "Go", extension: ".go" },
+    { id: "rust", name: "Rust", extension: ".rs" },
+    { id: "php", name: "PHP", extension: ".php" },
+    { id: "ruby", name: "Ruby", extension: ".rb" },
+  ];
+
+  const defaultCode = {
+    javascript:
+      '// Welcome to CodeForge!\n// Start typing your code here...\n\nconsole.log("Hello, World!");',
+    python:
+      '# Welcome to CodeForge!\n# Start typing your code here...\n\nprint("Hello, World!")',
+    java: 'public class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}',
+    cpp: '#include <iostream>\nusing namespace std;\n\nint main() {\n    cout << "Hello, World!" << endl;\n    return 0;\n}',
+    c: '#include <stdio.h>\n\nint main() {\n    printf("Hello, World!\\n");\n    return 0;\n}',
+    csharp:
+      'using System;\n\nclass Program {\n    static void Main() {\n        Console.WriteLine("Hello, World!");\n    }\n}',
+    go: 'package main\n\nimport "fmt"\n\nfunc main() {\n    fmt.Println("Hello, World!")\n}',
+    rust: 'fn main() {\n    println!("Hello, World!");\n}',
+    php: '<?php\necho "Hello, World!";\n?>',
+    ruby: 'puts "Hello, World!"',
+  };
+
+  useEffect(() => {
+    if (chatEndRef.current && showChat) {
+      chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [chatMessages, showChat]);
+
+  useEffect(() => {
+    if (id) {
+      loadFile(id);
+    }
+  }, [id]);
+
+  const loadFile = async (fileId: string) => {
+    try {
+      const response = await axios.get(`/files/${fileId}`);
+      const file = response.data;
+      setFileName(file.title);
+      setFileDescription(file.description);
+      setLanguage(file.language);
+      setCode(file.code);
+      setInput(file.input || "");
+    } catch (error) {
+      toast.error("Failed to load file");
+    }
+  };
+
+  const handleLanguageChange = (newLanguage: string) => {
+    setLanguage(newLanguage);
+    setCode(defaultCode[newLanguage as keyof typeof defaultCode] || "");
+  };
+
+  const runCode = async () => {
+    if (!code.trim()) {
+      toast.error("Please enter some code to run");
+      return;
+    }
+
+    setIsRunning(true);
+    setOutput("Running...");
+
+    try {
+      const response = await axios.post("/code/execute", {
+        code,
+        language,
+        input,
+      });
+
+      if (response.data.success) {
+        setOutput(
+          response.data.output || "Code executed successfully (no output)"
+        );
+      } else {
+        setOutput(`Error: ${response.data.error}`);
+      }
+    } catch (error: any) {
+      setOutput(
+        `Execution failed: ${error.response?.data?.error || error.message}`
+      );
+      toast.error("Failed to execute code");
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  const saveFile = async () => {
+    if (!fileName.trim()) {
+      toast.error("Please enter a file name");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const fileData = {
+        title: fileName,
+        description: fileDescription,
+        language,
+        code,
+        input,
+      };
+
+      if (id) {
+        await axios.put(`/files/${id}`, fileData);
+        toast.success("File updated successfully");
+      } else {
+        const response = await axios.post("/files", fileData);
+        toast.success("File saved successfully");
+        window.history.replaceState(null, "", `/editor/${response.data._id}`);
+      }
+    } catch (error) {
+      toast.error("Failed to save file");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const copyCode = () => {
+    navigator.clipboard.writeText(code);
+    toast.success("Code copied to clipboard");
+  };
+
+  const sendChatMessage = async () => {
+    if (!chatInput.trim()) return;
+
+    const userMessage = {
+      id: Date.now().toString(),
+      sender: "user" as const,
+      message: chatInput,
+      timestamp: new Date(),
+    };
+
+    setChatMessages((prev) => [...prev, userMessage]);
+    setChatInput("");
+    setIsChatLoading(true);
+
+    try {
+      const response = await axios.post("/ai/chat", {
+        message: chatInput,
+      });
+
+      const aiMessage = {
+        id: (Date.now() + 1).toString(),
+        sender: "ai" as const,
+        message: response.data.response,
+        timestamp: new Date(),
+      };
+
+      setChatMessages((prev) => [...prev, aiMessage]);
+    } catch (error) {
+      toast.error("Failed to get AI response");
+    } finally {
+      setIsChatLoading(false);
+    }
+  };
+
+  return (
+    <div className="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col relative">
+      {/* Header */}
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 relative z-20">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <FileText className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+              <input
+                type="text"
+                value={fileName}
+                onChange={(e) => setFileName(e.target.value)}
+                className="bg-transparent text-lg font-medium text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-2 py-1 min-w-0"
+                placeholder="File name"
+              />
+            </div>
+            <select
+              value={language}
+              onChange={(e) => handleLanguageChange(e.target.value)}
+              className="bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {languages.map((lang) => (
+                <option key={lang.id} value={lang.id}>
+                  {lang.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setShowSettings(!showSettings)}
+              className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              <Settings className="h-5 w-5" />
+            </button>
+            <button
+              onClick={copyCode}
+              className="hidden sm:flex items-center space-x-2 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            >
+              <Copy className="h-4 w-4" />
+              <span className="text-sm">Copy</span>
+            </button>
+            <button
+              onClick={saveFile}
+              disabled={isSaving}
+              className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+            >
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              <span className="text-sm hidden sm:inline">
+                {isSaving ? "Saving..." : "Save"}
+              </span>
+            </button>
+            <button
+              onClick={runCode}
+              disabled={isRunning}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+            >
+              {isRunning ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Play className="h-4 w-4" />
+              )}
+              <span className="text-sm hidden sm:inline">
+                {isRunning ? "Running..." : "Run"}
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Settings Panel */}
+      {showSettings && (
+        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 animate-in slide-in-from-top duration-200">
+          <div className="max-w-sm">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 ">
+              Description
+            </label>
+            <textarea
+              value={fileDescription}
+              onChange={(e) => setFileDescription(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              rows={2}
+              placeholder="Enter file description..."
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col relative">
+        {/* Code Editor */}
+        <div className="flex-1 flex flex-col ">
+          <div className="flex-1 ">
+            <Editor
+              height="100%"
+              language={language === "cpp" ? "cpp" : language}
+              value={code}
+              onChange={(value) => setCode(value || "")}
+              theme={theme === "dark" ? "vs-dark" : "vs-light"}
+              options={{
+                minimap: { enabled: false },
+                fontSize: 14,
+                lineNumbers: "on",
+                wordWrap: "on",
+                automaticLayout: true,
+                scrollBeyondLastLine: false,
+                smoothScrolling: true,
+                cursorBlinking: "smooth",
+                renderWhitespace: "boundary",
+                bracketPairColorization: { enabled: true },
+              }}
+              onMount={(editor) => {
+                editorRef.current = editor;
+              }}
+            />
+          </div>
+
+          {/* Input/Output Section */}
+          <div className="h-48 sm:h-64 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row">
+            <div className="flex-1 flex flex-col border-b sm:border-b-0 sm:border-r border-gray-200 dark:border-gray-700">
+              <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Input
+                </h3>
+              </div>
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                className="flex-1 p-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-white resize-none focus:outline-none text-sm"
+                placeholder="Enter input for your program..."
+              />
+            </div>
+            <div className="flex-1 flex flex-col">
+              <div className="bg-gray-100 dark:bg-gray-800 px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Output
+                </h3>
+              </div>
+              <div className="flex-1 p-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-mono text-sm overflow-auto">
+                <pre className="whitespace-pre-wrap">{output}</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* AI Assistant Button */}
+      <button
+        onClick={() => setShowChat(!showChat)}
+        className="fixed bottom-6 right-6 z-30 w-14 h-14 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group hover:scale-110"
+      >
+        {showChat ? (
+          <X className="h-6 w-6" />
+        ) : (
+          <MessageSquare className="h-6 w-6" />
+        )}
+        <div className="absolute -top-12 right-0 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+          {showChat ? "Close AI Assistant" : "Open AI Assistant"}
+        </div>
+      </button>
+
+      {/* AI Chat Panel */}
+      {showChat && (
+        <div className="fixed bottom-0 right-0 w-full sm:w-96 h-[80%] bg-white dark:bg-gray-800 border-l border-t border-gray-200 dark:border-gray-700 flex flex-col z-20 animate-in slide-in-from-bottom duration-300 shadow-2xl">
+          <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                DSA Assistant
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Ask me anything about Data Structures & Algorithms
+              </p>
+            </div>
+            <button
+              onClick={() => setShowChat(false)}
+              className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            >
+              <ChevronDown className="h-5 w-5" />
+            </button>
+          </div>
+
+          <div
+            ref={chatContainerRef}
+            className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth"
+          >
+            {chatMessages.length === 0 && (
+              <div className="text-center text-gray-500 dark:text-gray-400 py-8">
+                <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p className="text-sm">
+                  Start a conversation with the AI assistant!
+                </p>
+              </div>
+            )}
+
+            {chatMessages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${
+                  message.sender === "user" ? "justify-end" : "justify-start"
+                } animate-in fade-in slide-in-from-bottom-2 duration-300`}
+              >
+                <div
+                  className={`max-w-xs px-4 py-2 rounded-lg ${
+                    message.sender === "user"
+                      ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                      : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
+                  }`}
+                >
+                  <p className="text-sm whitespace-pre-wrap">
+                    {message.message}
+                  </p>
+                  <p className="text-xs opacity-70 mt-1">
+                    {message.timestamp.toLocaleTimeString()}
+                  </p>
+                </div>
+              </div>
+            ))}
+
+            {isChatLoading && (
+              <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="bg-gray-100 dark:bg-gray-700 rounded-lg px-4 py-2">
+                  <div className="flex items-center space-x-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-sm">AI is thinking...</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={chatEndRef} />
+          </div>
+
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex space-x-2">
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    sendChatMessage();
+                  }
+                }}
+                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                placeholder="Ask about DSA..."
+              />
+              <button
+                onClick={sendChatMessage}
+                disabled={isChatLoading || !chatInput.trim()}
+                className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Send className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default CodeEditor;
