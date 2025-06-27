@@ -31,7 +31,7 @@ app.use('/api/', limiter);
 // CORS configuration
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://your-domain.com'] 
+    ? ['https://code-editor-frontend.onrender.com', 'https://your-domain.com'] 
     : ['http://localhost:5173', 'http://localhost:3000'],
   credentials: true
 }));
