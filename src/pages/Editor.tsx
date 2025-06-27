@@ -1914,7 +1914,7 @@ Feel free to ask me about any specific topic, share your code for review, or req
           {/* Input/Output Section */}
           <div
             className={`${
-              isOutputExpanded ? "h-96" : "h-32 sm:h-48 md:h-64"
+              isOutputExpanded ? "h-96" : "h-60 sm:h-60 md:h-80"
             } border-t border-gray-200 dark:border-gray-700 flex flex-col lg:flex-row transition-all duration-300 flex-shrink-0`}
           >
             {/* Expand/Collapse Button */}
