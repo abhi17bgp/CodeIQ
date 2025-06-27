@@ -531,7 +531,10 @@ I'm here to help you with Data Structures and Algorithms. Ask me anything!`,
           setShowChat(!showChat);
           if (!showChat) setIsChatMinimized(false);
         }}
-        className="fixed bottom-4 right-4 z-30 w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group hover:scale-110"
+         className={`fixed bottom-4 right-4 z-30 w-12 h-12 sm:w-14 sm:h-14
+          bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full shadow-lg
+          hover:shadow-xl transition-all duration-300 flex items-center justify-center group hover:scale-110
+          ${showChat ? "opacity-0" : "opacity-100"}`}
       >
         {showChat ? (
           <X className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -647,7 +650,7 @@ I'm here to help you with Data Structures and Algorithms. Ask me anything!`,
                   <button
                     onClick={sendChatMessage}
                     disabled={isChatLoading || !chatInput.trim()}
-                    className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                    className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 disabled:opacity-100 disabled:cursor-not-allowed flex-shrink-0"
                   >
                     <Send className="h-3 w-3 sm:h-4 sm:w-4" />
                   </button>
