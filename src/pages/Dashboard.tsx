@@ -151,7 +151,7 @@ const Dashboard: React.FC = () => {
       title: "AI Assistant",
       description: "Get help with DSA concepts",
       icon: Brain,
-      link: "/editor",
+      link: "/editor?ai=true",
       color: "from-purple-600 to-purple-700",
     },
   ];
