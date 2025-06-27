@@ -1,7 +1,7 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Code, Zap, Brain, Shield, Users, Rocket } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import React from "react";
+import { Link } from "react-router-dom";
+import { Code, Zap, Brain, Shield } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 
 const Home: React.FC = () => {
   const { user } = useAuth();
@@ -9,34 +9,28 @@ const Home: React.FC = () => {
   const features = [
     {
       icon: Code,
-      title: 'Multi-Language Support',
-      description: 'Write code in JavaScript, Python, Java, C++, and more with syntax highlighting and auto-completion.'
+      title: "Multi-Language Support",
+      description:
+        "Write code in JavaScript, Python, Java, C++, and more with syntax highlighting and auto-completion.",
     },
     {
       icon: Zap,
-      title: 'Instant Execution',
-      description: 'Run your code instantly with our powerful backend integration using Judge0 API.'
+      title: "Instant Execution",
+      description:
+        "Run your code instantly with our powerful backend integration using Judge0 API.",
     },
     {
       icon: Brain,
-      title: 'AI DSA Instructor',
-      description: 'Get personalized help with Data Structures and Algorithms from our AI-powered instructor.'
+      title: "AI DSA Instructor",
+      description:
+        "Get personalized help with Data Structures and Algorithms from our AI-powered instructor.",
     },
     {
       icon: Shield,
-      title: 'Secure & Private',
-      description: 'Your code and data are protected with enterprise-grade security and encryption.'
+      title: "Secure & Private",
+      description:
+        "Your code and data are protected with enterprise-grade security and encryption.",
     },
-    {
-      icon: Users,
-      title: 'Collaborative',
-      description: 'Share your code files and collaborate with other developers in real-time.'
-    },
-    {
-      icon: Rocket,
-      title: 'Production Ready',
-      description: 'Built with modern technologies and best practices for scalability and performance.'
-    }
   ];
 
   return (
@@ -47,15 +41,15 @@ const Home: React.FC = () => {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
-              Code, Compile, and{' '}
+              Code, Compile, and{" "}
               <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Conquer
               </span>
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
-              The ultimate coding platform with multi-language support, instant execution, 
-              and AI-powered assistance. Perfect for learning, practicing, and mastering 
-              Data Structures & Algorithms.
+              The ultimate coding platform with multi-language support, instant
+              execution, and AI-powered assistance. Perfect for learning,
+              practicing, and mastering Data Structures & Algorithms.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               {user ? (
@@ -94,7 +88,8 @@ const Home: React.FC = () => {
               Everything You Need to Code
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              Powerful features designed to enhance your coding experience and accelerate your learning.
+              Powerful features designed to enhance your coding experience and
+              accelerate your learning.
             </p>
           </div>
 
@@ -126,7 +121,8 @@ const Home: React.FC = () => {
             Ready to Start Your Coding Journey?
           </h2>
           <p className="text-xl text-blue-100 mb-8">
-            Join thousands of developers who are already using CodeForge to improve their skills.
+            Join thousands of developers who are already using CodeForge to
+            improve their skills.
           </p>
           {!user && (
             <Link
