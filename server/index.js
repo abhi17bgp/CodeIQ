@@ -33,7 +33,7 @@ app.use("/api/", limiter);
 // CORS configuration
 app.use(
   cors({
-    origin: ["*"],
+    origin: "*",
     credentials: true,
   })
 );
