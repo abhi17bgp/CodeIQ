@@ -1,8 +1,8 @@
-import React from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Code, Sun, Moon, User, LogOut, Files, Home, Settings } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
+import React from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Code, Sun, Moon, User, LogOut, Files, Home } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
+import { useTheme } from "../contexts/ThemeContext";
 
 const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
@@ -12,7 +12,7 @@ const Navbar: React.FC = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate("/");
   };
 
   const isActive = (path: string) => location.pathname === path;
@@ -37,9 +37,9 @@ const Navbar: React.FC = () => {
               <Link
                 to="/dashboard"
                 className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive('/dashboard')
-                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  isActive("/dashboard")
+                    ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                 }`}
               >
                 <Home className="h-4 w-4" />
@@ -48,9 +48,9 @@ const Navbar: React.FC = () => {
               <Link
                 to="/editor"
                 className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive('/editor')
-                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  isActive("/editor")
+                    ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                 }`}
               >
                 <Code className="h-4 w-4" />
@@ -59,9 +59,9 @@ const Navbar: React.FC = () => {
               <Link
                 to="/files"
                 className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive('/files')
-                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                  isActive("/files")
+                    ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                 }`}
               >
                 <Files className="h-4 w-4" />
@@ -78,7 +78,7 @@ const Navbar: React.FC = () => {
               className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
               aria-label="Toggle theme"
             >
-              {theme === 'light' ? (
+              {theme === "light" ? (
                 <Moon className="h-5 w-5 text-gray-700 dark:text-gray-300" />
               ) : (
                 <Sun className="h-5 w-5 text-gray-700 dark:text-gray-300" />
