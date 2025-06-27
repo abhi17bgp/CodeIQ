@@ -88,8 +88,8 @@ const Home: React.FC = () => {
               Everything You Need to Code
             </h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              Powerful features designed to enhance your coding experience and
-              accelerate your learning.
+            Code smarter with real-time AI assistance, multi-language support,
+            and a powerful in-browser compiler — all in one place.
             </p>
           </div>
 
@@ -121,8 +121,8 @@ const Home: React.FC = () => {
             Ready to Start Your Coding Journey?
           </h2>
           <p className="text-xl text-blue-100 mb-8">
-            Join thousands of developers who are already using CodeForge to
-            improve their skills.
+            Powerful features designed to enhance your coding experience and
+              accelerate your learning.
           </p>
           {!user && (
             <Link
