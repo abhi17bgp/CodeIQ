@@ -534,7 +534,7 @@ I'm here to help you with Data Structures and Algorithms. Ask me anything!`,
          className={`fixed bottom-4 right-4 z-30 w-12 h-12 sm:w-14 sm:h-14
           bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full shadow-lg
           hover:shadow-xl transition-all duration-300 flex items-center justify-center group hover:scale-110
-          ${showChat ? "opacity-0" : "opacity-100"}`}
+         ${showChat ? "mb-10" : "mb-4"}`}
       >
         {showChat ? (
           <X className="h-5 w-5 sm:h-6 sm:w-6" />
