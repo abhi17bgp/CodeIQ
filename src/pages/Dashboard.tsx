@@ -132,6 +132,14 @@ import WelcomeBanner from "../components/WelcomeBanner";
 
 
 const Dashboard: React.FC = () => {
+    const [showBanner, setShowBanner] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem("showWelcome") === "true") {
+      setShowBanner(true);
+      localStorage.removeItem("showWelcome");
+    }
+  }, []);
   const { user } = useAuth();
 
   const quickActions = [
