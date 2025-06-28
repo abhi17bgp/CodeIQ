@@ -128,6 +128,8 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Files, Brain, Plus } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import WelcomeBanner from "../components/WelcomeBanner";
+
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -158,6 +160,9 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+        {showBanner && (
+        <WelcomeBanner username={user?.profile.firstName || "User"} />
+      )}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)]">
           {/* Header */}
