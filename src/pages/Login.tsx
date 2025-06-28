@@ -16,6 +16,8 @@ const Login: React.FC = () => {
 
     const success = await authLogin(login, password);
     if (success) {
+            localStorage.setItem("showWelcome", "true"); // flag for next page
+
       navigate('/dashboard');
     }
     setLoading(false);
