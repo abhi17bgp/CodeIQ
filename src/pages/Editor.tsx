@@ -1308,7 +1308,7 @@ I'm here to help you with Data Structures and Algorithms. Ask me anything!`,
           {/* Input/Output Section */}
           <div
             className={`${
-              isOutputExpanded ? "h-96" : "h-60 sm:h-60 md:h-80"
+              isOutputExpanded ? "h-96" : "h-60 sm:h-50 md:h-50"
             } border-t border-gray-200 dark:border-gray-700 flex flex-col lg:flex-row transition-all duration-300 flex-shrink-0`}
           >
             {/* Expand/Collapse Button */}
