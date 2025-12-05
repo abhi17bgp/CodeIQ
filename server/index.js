@@ -8,6 +8,7 @@ import authRoutes from "./routes/auth.js";
 import codeRoutes from "./routes/code.js";
 import aiRoutes from "./routes/ai.js";
 import fileRoutes from "./routes/files.js";
+import statsRoutes from "./routes/stats.js";
 
 dotenv.config();
 
@@ -53,6 +54,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/code", codeRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/files", fileRoutes);
+app.use("/api/stats", statsRoutes);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {

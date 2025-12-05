@@ -665,7 +665,7 @@
 // };
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import Editor from "@monaco-editor/react";
 import {
   Play,
@@ -681,10 +681,13 @@ import {
   ChevronUp,
   Maximize2,
   Minimize2,
+  Sparkles,
+  FileCode,
 } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 import { useAuth } from "../contexts/AuthContext";
 import MessageRenderer from "./MessageRenderer";
+import TemplatesPanel from "../components/TemplatesPanel";
 import axios from "axios";
 import toast from "react-hot-toast";
 
@@ -841,6 +844,7 @@ const languages = [
 
 const CodeEditor: React.FC = () => {
   const { id } = useParams();
+  const location = useLocation();
   const { theme } = useTheme();
   const { user, loading } = useAuth();
 
@@ -868,6 +872,7 @@ const CodeEditor: React.FC = () => {
   const [isOutputExpanded, setIsOutputExpanded] = useState<boolean>(false);
   const [isChatMinimized, setIsChatMinimized] = useState<boolean>(false);
   const [isDataLoaded, setIsDataLoaded] = useState<boolean>(false);
+  const [showTemplates, setShowTemplates] = useState<boolean>(false);
 
   // Track previous user state for data transfer
   const [previousUserId, setPreviousUserId] = useState<string | null>(null);
@@ -995,10 +1000,21 @@ const CodeEditor: React.FC = () => {
     isDataLoaded,
   ]);
 
+  // Clear output when navigating away or switching pages
+  useEffect(() => {
+    // Clear output when component mounts or route changes
+    setOutput("");
+  }, [location.pathname]);
+
   // Load file if ID changes
   useEffect(() => {
     if (id && isDataLoaded) {
+      // Clear output before loading new file
+      setOutput("");
       loadFile(id);
+    } else if (!id && isDataLoaded) {
+      // Clear output when navigating to new editor (no ID)
+      setOutput("");
     }
   }, [id, isDataLoaded]);
 
@@ -1032,6 +1048,9 @@ I'm here to help you with Data Structures and Algorithms. Ask me anything!`,
 
   const loadFile = async (fileId: string) => {
     try {
+      // Clear output immediately when loading a new file
+      setOutput("");
+      
       const response = await axios.get(`/files/${fileId}`);
       const file = response.data;
       setFileName(file.title);
@@ -1117,6 +1136,8 @@ I'm here to help you with Data Structures and Algorithms. Ask me anything!`,
         const response = await axios.post("/files", fileData);
         toast.success("File saved successfully");
         window.history.replaceState(null, "", `/editor/${response.data._id}`);
+        // Trigger stats update event for new file creation
+        window.dispatchEvent(new Event('statsUpdate'));
       }
 
       saveToLocalStorage(); // Save after file save
@@ -1130,6 +1151,39 @@ I'm here to help you with Data Structures and Algorithms. Ask me anything!`,
   const copyCode = () => {
     navigator.clipboard.writeText(code);
     toast.success("Code copied to clipboard");
+  };
+
+  const handleInsertTemplate = (templateCode: string) => {
+    // Replace current code with template
+    setCode(templateCode);
+    setShowTemplates(false);
+    toast.success("Template inserted successfully");
+  };
+
+  // Helper function to detect if user wants to run/execute code
+  const shouldRunCode = (message: string): boolean => {
+    const runKeywords = [
+      'run it',
+      'run the code',
+      'run this',
+      'execute',
+      'execute it',
+      'execute the code',
+      'execute this',
+      'test it',
+      'test the code',
+      'test this',
+      'run code',
+      'run',
+      'execute code',
+      'run now',
+      'please run',
+      'can you run',
+      'run please'
+    ];
+    
+    const lowerMessage = message.toLowerCase().trim();
+    return runKeywords.some(keyword => lowerMessage.includes(keyword));
   };
 
   const sendChatMessage = async () => {
@@ -1147,9 +1201,27 @@ I'm here to help you with Data Structures and Algorithms. Ask me anything!`,
     setChatInput("");
     setIsChatLoading(true);
 
+    // Check if user wants to run the code
+    const userWantsToRun = shouldRunCode(currentInput);
+
     try {
+      // Get previous chat messages (excluding welcome message and current message)
+      // Limit to last 20 messages to avoid token limits
+      const previousMessages = chatMessages
+        .filter(msg => msg.id !== "welcome")
+        .slice(-20)
+        .map(msg => ({
+          sender: msg.sender,
+          message: msg.message
+        }));
+
       const response = await axios.post("/ai/chat", {
         message: currentInput,
+        chatHistory: previousMessages,
+        code: code,
+        language: language,
+        input: input,
+        error: output && output.includes("Error") ? output : null,
       });
 
       const aiMessage = {
@@ -1160,6 +1232,14 @@ I'm here to help you with Data Structures and Algorithms. Ask me anything!`,
       };
 
       setChatMessages((prev) => [...prev, aiMessage]);
+
+      // If user asked to run the code, automatically trigger runCode
+      if (userWantsToRun && code.trim()) {
+        // Small delay to let the AI message appear first
+        setTimeout(() => {
+          runCode();
+        }, 500);
+      }
     } catch (error) {
       toast.error("Failed to get AI response");
     } finally {
@@ -1171,28 +1251,28 @@ I'm here to help you with Data Structures and Algorithms. Ask me anything!`,
   // Show loading state while auth is loading
   if (loading) {
     return (
-      <div className="h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="h-screen bg-background flex items-center justify-center">
         <div className="flex items-center space-x-2">
-          <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-          <span className="text-gray-600 dark:text-gray-400">Loading...</span>
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <span className="text-muted-foreground">Loading...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col relative overflow-hidden">
+    <div className="h-screen bg-background flex flex-col relative overflow-hidden">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-2 sm:px-4 py-2 sm:py-3 relative z-20 flex-shrink-0">
+      <div className="bg-card border-b border-border px-2 sm:px-4 py-2 sm:py-3 relative z-20 flex-shrink-0">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
             <div className="flex items-center space-x-2 min-w-0">
-              <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600 dark:text-gray-400 flex-shrink-0" />
+              <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground flex-shrink-0" />
               <input
                 type="text"
                 value={fileName}
                 onChange={(e) => setFileName(e.target.value)}
-                className="bg-transparent text-sm sm:text-lg font-medium text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-1 sm:px-2 py-1 min-w-0 flex-1"
+                className="bg-transparent text-sm sm:text-lg font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-ring rounded px-1 sm:px-2 py-1 min-w-0 flex-1"
                 placeholder="File name"
               />
             </div>
@@ -1210,6 +1290,14 @@ I'm here to help you with Data Structures and Algorithms. Ask me anything!`,
           </div>
 
           <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+            <button
+              onClick={() => setShowTemplates(true)}
+              className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              title="Templates & Snippets"
+            >
+              <FileCode className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="text-xs sm:text-sm hidden sm:inline">Templates</span>
+            </button>
             <button
               onClick={() => setShowSettings(!showSettings)}
               className="p-1.5 sm:p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
@@ -1257,15 +1345,15 @@ I'm here to help you with Data Structures and Algorithms. Ask me anything!`,
 
       {/* Settings Panel */}
       {showSettings && (
-        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 py-3 animate-in slide-in-from-top duration-200 flex-shrink-0">
+        <div className="bg-card border-b border-border px-4 py-3 animate-in slide-in-from-top duration-200 flex-shrink-0">
           <div className="max-w-sm">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-foreground mb-2">
               Description
             </label>
             <textarea
               value={fileDescription}
               onChange={(e) => setFileDescription(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+              className="w-full px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring bg-background text-foreground text-sm"
               rows={2}
               placeholder="Enter file description..."
             />
@@ -1309,12 +1397,12 @@ I'm here to help you with Data Structures and Algorithms. Ask me anything!`,
           <div
             className={`${
               isOutputExpanded ? "h-96" : "h-60 sm:h-50 md:h-50"
-            } border-t border-gray-200 dark:border-gray-700 flex flex-col lg:flex-row transition-all duration-300 flex-shrink-0`}
+            } border-t border-border flex flex-col lg:flex-row transition-all duration-300 flex-shrink-0`}
           >
             {/* Expand/Collapse Button */}
             <button
               onClick={() => setIsOutputExpanded(!isOutputExpanded)}
-              className="absolute right-2 -top-8 z-10 p-1 bg-gray-100 dark:bg-gray-700 rounded-t-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors lg:hidden"
+              className="absolute right-2 -top-8 z-10 p-1 bg-secondary rounded-t-lg text-muted-foreground hover:text-foreground transition-colors lg:hidden"
             >
               {isOutputExpanded ? (
                 <Minimize2 className="h-4 w-4" />
@@ -1323,26 +1411,26 @@ I'm here to help you with Data Structures and Algorithms. Ask me anything!`,
               )}
             </button>
 
-            <div className="flex-1 flex flex-col border-b lg:border-b-0 lg:border-r border-gray-200 dark:border-gray-700">
-              <div className="bg-gray-100 dark:bg-gray-800 px-3 sm:px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-                <h3 className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
+            <div className="flex-1 flex flex-col border-b lg:border-b-0 lg:border-r border-border">
+              <div className="bg-muted px-3 sm:px-4 py-2 border-b border-border">
+                <h3 className="text-xs sm:text-sm font-medium text-foreground">
                   Input
                 </h3>
               </div>
               <textarea
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                className="flex-1 p-2 sm:p-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-white resize-none focus:outline-none text-xs sm:text-sm"
+                className="flex-1 p-2 sm:p-4 bg-background text-foreground resize-none focus:outline-none text-xs sm:text-sm"
                 placeholder="Enter input for your program..."
               />
             </div>
             <div className="flex-1 flex flex-col">
-              <div className="bg-gray-100 dark:bg-gray-800 px-3 sm:px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-                <h3 className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300">
+              <div className="bg-muted px-3 sm:px-4 py-2 border-b border-border">
+                <h3 className="text-xs sm:text-sm font-medium text-foreground">
                   Output
                 </h3>
               </div>
-              <div className="flex-1 p-2 sm:p-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-white font-mono text-xs sm:text-sm overflow-auto">
+              <div className="flex-1 p-2 sm:p-4 bg-background text-foreground font-mono text-xs sm:text-sm overflow-auto">
                 <pre className="whitespace-pre-wrap break-words">{output}</pre>
               </div>
             </div>
@@ -1350,49 +1438,38 @@ I'm here to help you with Data Structures and Algorithms. Ask me anything!`,
         </div>
       </div>
 
-      {/* AI Assistant Button */}
-      <button
-        onClick={() => {
-          setShowChat(!showChat);
-          if (!showChat) setIsChatMinimized(false);
-        }}
-        className={`fixed bottom-4 right-4 z-30 w-12 h-12 sm:w-14 sm:h-14
-          bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-full shadow-lg
-          hover:shadow-xl transition-all duration-300 flex items-center justify-center group hover:scale-110
-          ${showChat ? "mb-10" : "mb-4"} `}
-      >
-        {showChat ? (
-          <X className="h-5 w-5 sm:h-6 sm:w-6  " />
-        ) : (
-          <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6" />
-        )}
-        <div className="absolute -top-10 sm:-top-12 right-0 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-          {showChat ? "Close AI Assistant" : "Open AI Assistant"}
-        </div>
-      </button>
-
-      {/* AI Chat Panel */}
+      {/* AI Chat Panel - Overlay Side Panel */}
       {showChat && (
         <div
-          className={`fixed bottom-0 right-0 w-full sm:w-80 md:w-96 ${
-            isChatMinimized ? "h-16" : "h-[70vh] sm:h-[80vh]"
-          } bg-white dark:bg-gray-800 border-l border-t border-gray-200 dark:border-gray-700 flex flex-col z-20 transition-all duration-300 shadow-2xl`}
+          className={`fixed top-16 bottom-0 right-0 w-full sm:w-80 md:w-96 bg-card border-l border-border flex flex-col transition-all duration-300 shadow-2xl backdrop-blur-sm z-20`}
         >
-          <div className="p-3 sm:p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
-            <div className="min-w-0 flex-1">
-              <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-white truncate">
+          {/* Decorative background elements */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 opacity-50 pointer-events-none"></div>
+          <div className="absolute top-10 right-10 w-20 h-20 bg-primary/5 rounded-full blur-2xl pointer-events-none"></div>
+          <div className="absolute bottom-20 left-10 w-16 h-16 bg-primary/5 rounded-full blur-xl pointer-events-none"></div>
+          <div className="p-3 sm:p-4 border-b border-border flex items-center justify-between flex-shrink-0 bg-primary/5 backdrop-blur-sm relative overflow-hidden">
+            {/* Decorative gradient background */}
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-primary/5 opacity-50"></div>
+            
+            <div className="min-w-0 flex-1 relative z-10">
+              <div className="inline-flex items-center gap-2 px-2 py-1 mb-2 bg-primary/10 border border-primary/20 rounded-full">
+                <Sparkles className="h-3 w-3 text-primary animate-pulse" />
+                <span className="text-xs font-medium text-primary">AI Powered</span>
+              </div>
+              <h3 className="text-base sm:text-lg font-semibold text-foreground truncate flex items-center gap-2">
+                <MessageSquare className="h-4 w-4 text-primary" />
                 DSA Assistant
               </h3>
               {!isChatMinimized && (
-                <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
+                <p className="text-xs sm:text-sm text-muted-foreground truncate mt-1">
                   Ask me anything about Data Structures & Algorithms
                 </p>
               )}
             </div>
-            <div className="flex items-center space-x-1 flex-shrink-0">
+            <div className="flex items-center space-x-1 flex-shrink-0 relative z-10">
               <button
                 onClick={() => setIsChatMinimized(!isChatMinimized)}
-                className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-300 transform hover:scale-110"
               >
                 {isChatMinimized ? (
                   <ChevronUp className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -1402,9 +1479,9 @@ I'm here to help you with Data Structures and Algorithms. Ask me anything!`,
               </button>
               <button
                 onClick={() => setShowChat(false)}
-                className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors "
+                className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all duration-300 transform hover:scale-110"
               >
-                <X className="h-4 w-4 sm:h-5 sm:w-5  " />
+                <X className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
             </div>
           </div>
@@ -1413,7 +1490,8 @@ I'm here to help you with Data Structures and Algorithms. Ask me anything!`,
             <>
               <div
                 ref={chatContainerRef}
-                className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 scroll-smooth min-h-0"
+                className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 scroll-smooth min-h-0 bg-muted/20 relative z-10"
+                style={{ maxHeight: 'calc(100vh - 200px)' }}
               >
                 {chatMessages.map((message) => (
                   <div
@@ -1425,17 +1503,17 @@ I'm here to help you with Data Structures and Algorithms. Ask me anything!`,
                     } animate-in fade-in slide-in-from-bottom-2 duration-300`}
                   >
                     <div
-                      className={`max-w-[90%] px-3 sm:px-4 py-2 rounded-lg ${
+                      className={`max-w-[90%] px-3 sm:px-4 py-2 rounded-lg shadow-lg transition-all duration-300 hover:shadow-xl ${
                         message.sender === "user"
-                          ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
-                          : "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
+                          ? "bg-primary text-primary-foreground ml-auto shadow-primary/50 hover:shadow-primary/60"
+                          : "bg-card border border-border text-foreground hover:border-primary/50"
                       }`}
                     >
                       <MessageRenderer
                         content={message.message}
                         isUser={message.sender === "user"}
                       />
-                      <p className="text-xs opacity-70 mt-2">
+                      <p className="text-xs opacity-70 mt-2 text-foreground/60">
                         {message.timestamp.toLocaleTimeString()}
                       </p>
                     </div>
@@ -1444,10 +1522,15 @@ I'm here to help you with Data Structures and Algorithms. Ask me anything!`,
 
                 {isChatLoading && (
                   <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-300">
-                    <div className="bg-gray-100 dark:bg-gray-700 rounded-lg px-3 sm:px-4 py-2">
+                    <div className="bg-card border border-border rounded-lg px-3 sm:px-4 py-2 shadow-lg">
                       <div className="flex items-center space-x-2">
-                        <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                        <span className="text-xs sm:text-sm">
+                        <div className="relative">
+                          <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin text-primary" />
+                          <div className="absolute inset-0 animate-ping text-primary/20">
+                            <Loader2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                          </div>
+                        </div>
+                        <span className="text-xs sm:text-sm text-foreground font-medium">
                           AI is thinking...
                         </span>
                       </div>
@@ -1457,7 +1540,7 @@ I'm here to help you with Data Structures and Algorithms. Ask me anything!`,
                 <div ref={chatEndRef} />
               </div>
 
-              <div className="p-3 sm:p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+              <div className="p-3 sm:p-4 border-t border-border flex-shrink-0 bg-card/50 backdrop-blur-sm">
                 <div className="flex space-x-2">
                   <input
                     type="text"
@@ -1469,15 +1552,15 @@ I'm here to help you with Data Structures and Algorithms. Ask me anything!`,
                         sendChatMessage();
                       }
                     }}
-                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-xs sm:text-sm"
+                    className="flex-1 px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary bg-background text-foreground text-xs sm:text-sm transition-all duration-300"
                     placeholder="Ask about DSA..."
                   />
                   <button
                     onClick={sendChatMessage}
                     disabled={isChatLoading || !chatInput.trim()}
-                    className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 disabled:opacity-100 disabled:cursor-not-allowed flex-shrink-0"
+                    className="group p-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 shadow-lg shadow-primary/50 hover:shadow-xl hover:shadow-primary/60 transform hover:scale-110 disabled:hover:scale-100"
                   >
-                    <Send className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <Send className="h-3 w-3 sm:h-4 sm:w-4 group-hover:translate-x-0.5 transition-transform" />
                   </button>
                 </div>
               </div>
@@ -1485,6 +1568,33 @@ I'm here to help you with Data Structures and Algorithms. Ask me anything!`,
           )}
         </div>
       )}
+
+      {/* AI Assistant Toggle Button - Only show when chat is closed */}
+      {!showChat && (
+        <button
+          onClick={() => {
+            setShowChat(true);
+            setIsChatMinimized(false);
+          }}
+          className="fixed bottom-4 right-4 z-30 w-12 h-12 sm:w-14 sm:h-14
+            bg-primary text-primary-foreground rounded-full shadow-lg shadow-primary/50
+            hover:shadow-xl hover:shadow-primary/60 transition-all duration-300 flex items-center justify-center group hover:scale-110"
+        >
+          <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6" />
+          <div className="absolute -top-10 sm:-top-12 right-0 bg-primary text-primary-foreground text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+            Open AI Assistant
+          </div>
+        </button>
+      )}
+
+      {/* Templates Panel */}
+      <TemplatesPanel
+        isOpen={showTemplates}
+        onClose={() => setShowTemplates(false)}
+        onInsertTemplate={handleInsertTemplate}
+        currentLanguage={language}
+        currentCode={code}
+      />
     </div>
   );
 };

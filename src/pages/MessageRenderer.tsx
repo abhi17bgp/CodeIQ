@@ -46,7 +46,7 @@ const MessageRenderer: React.FC<MessageRendererProps> = ({
 
     if (inline) {
       return (
-        <code className="bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 px-1.5 py-0.5 rounded text-sm font-mono">
+        <code className="bg-muted text-foreground px-1.5 py-0.5 rounded text-sm font-mono">
           {children}
         </code>
       );
@@ -54,13 +54,13 @@ const MessageRenderer: React.FC<MessageRendererProps> = ({
 
     return (
       <div className="relative group my-3">
-        <div className="flex items-center justify-between bg-gray-100 dark:bg-gray-800 px-4 py-2 rounded-t-lg border-b border-gray-200 dark:border-gray-700">
-          <span className="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase">
+        <div className="flex items-center justify-between bg-muted px-4 py-2 rounded-t-lg border-b border-border">
+          <span className="text-xs font-medium text-muted-foreground uppercase">
             {language || "code"}
           </span>
           <button
             onClick={() => copyToClipboard(children)}
-            className="flex items-center space-x-1 px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors rounded"
+            className="flex items-center space-x-1 px-2 py-1 text-xs text-muted-foreground hover:text-foreground transition-colors rounded"
           >
             {copiedCode === children ? (
               <>
@@ -123,49 +123,49 @@ const MessageRenderer: React.FC<MessageRendererProps> = ({
           ),
           li: ({ children }) => <li className="leading-relaxed">{children}</li>,
           h1: ({ children }) => (
-            <h1 className="text-sm sm:text-base font-bold mb-2 text-gray-900 dark:text-white">
+            <h1 className="text-sm sm:text-base font-bold mb-2 text-foreground">
               {children}
             </h1>
           ),
           h2: ({ children }) => (
-            <h2 className="text-sm sm:text-base font-semibold mb-2 text-gray-900 dark:text-white">
+            <h2 className="text-sm sm:text-base font-semibold mb-2 text-foreground">
               {children}
             </h2>
           ),
           h3: ({ children }) => (
-            <h3 className="text-xs sm:text-sm font-semibold mb-1 text-gray-900 dark:text-white">
+            <h3 className="text-xs sm:text-sm font-semibold mb-1 text-foreground">
               {children}
             </h3>
           ),
           blockquote: ({ children }) => (
-            <blockquote className="border-l-4 border-blue-500 pl-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-r text-xs sm:text-sm mb-2">
+            <blockquote className="border-l-4 border-primary pl-4 py-2 bg-primary/10 rounded-r text-xs sm:text-sm mb-2">
               {children}
             </blockquote>
           ),
           table: ({ children }) => (
             <div className="overflow-x-auto mb-2">
-              <table className="min-w-full text-xs border border-gray-200 dark:border-gray-700">
+              <table className="min-w-full text-xs border border-border">
                 {children}
               </table>
             </div>
           ),
           th: ({ children }) => (
-            <th className="px-2 py-1 bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 font-semibold text-left">
+            <th className="px-2 py-1 bg-muted border border-border font-semibold text-left">
               {children}
             </th>
           ),
           td: ({ children }) => (
-            <td className="px-2 py-1 border border-gray-200 dark:border-gray-700">
+            <td className="px-2 py-1 border border-border">
               {children}
             </td>
           ),
           strong: ({ children }) => (
-            <strong className="font-semibold text-gray-900 dark:text-white">
+            <strong className="font-semibold text-foreground">
               {children}
             </strong>
           ),
           em: ({ children }) => (
-            <em className="italic text-gray-800 dark:text-gray-200">
+            <em className="italic text-foreground/80">
               {children}
             </em>
           ),
@@ -174,7 +174,7 @@ const MessageRenderer: React.FC<MessageRendererProps> = ({
               href={href}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-600 dark:text-blue-400 hover:underline"
+              className="text-primary hover:underline"
             >
               {children}
             </a>

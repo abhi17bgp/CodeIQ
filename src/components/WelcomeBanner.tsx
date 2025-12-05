@@ -200,7 +200,7 @@ const WelcomeBanner: React.FC<WelcomeBannerProps> = ({
         {/* Banner */}
         <div
           className={`mt-[7rem] px-6 py-4 rounded-2xl shadow-xl border border-white/30 backdrop-blur-xl
-          bg-gradient-to-r from-purple-500 via-indigo-600 to-blue-500
+          bg-primary
           text-white text-lg sm:text-xl font-semibold flex items-center gap-2 origin-top
           transform transition-all duration-1000 ease-in-out
           ${
