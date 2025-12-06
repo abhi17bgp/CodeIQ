@@ -37,7 +37,7 @@ interface RegisterData {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Configure axios defaults
-axios.defaults.baseURL = "https://codeiq-4.onrender.com/api";
+axios.defaults.baseURL = "https://codeiq-5.onrender.com/api";
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
