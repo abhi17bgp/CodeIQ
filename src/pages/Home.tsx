@@ -158,17 +158,20 @@ const Home: React.FC = () => {
 
   // Format count function (same as PlatformStats)
   const formatCount = (count: number): string => {
-    if (count >= 1000) {
-      return `${Math.floor(count / 1000)}K+`;
-    } else if (count >= 100) {
-      return `${Math.floor(count / 100) * 100}+`;
-    } else if (count >= 10) {
-      return `${Math.floor(count / 10) * 10}+`;
-    } else if (count > 0) {
-      return `${count}+`;
-    }
-    return '0';
-  };
+  if (count >= 1000) {
+    return `${Math.floor(count / 1000)}K+`;
+  } else if (count >= 100) {
+    return `${Math.floor(count)}+`;
+  } else if (count >= 10) {
+    // For numbers 10-99, round down to nearest 10 and add +
+    return `${Math.floor(count)}+`;
+  } else if (count > 0) {
+    // For numbers 1-9, show exact count with +
+    return `${count}+`;
+  }
+  return '0';
+};
+
 
   return (
     <div className="min-h-screen overflow-x-hidden">
