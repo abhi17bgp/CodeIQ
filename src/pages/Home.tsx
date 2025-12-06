@@ -408,7 +408,7 @@ const Home: React.FC = () => {
           </div>
         </div>
       </section>
-
+{/* 
       {/* CTA Section */}
       <section
         ref={ctaRef}
@@ -452,7 +452,70 @@ const Home: React.FC = () => {
             </Link>
           )}
         </div>
-      </section>
+      </section> */}
+      {/* CTA Section */}
+<section
+  ref={ctaRef}
+  id="cta"
+  className="relative py-24 overflow-hidden scroll-mt-20"
+>
+  {/* Animated Gradient Background */}
+  <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/80 to-primary bg-animated-gradient"></div>
+
+  {/* Decorative Elements */}
+  <div className="absolute top-0 left-0 w-72 h-72 
+      dark:bg-white/5 bg-black/10 
+      rounded-full blur-3xl animate-pulse-slow">
+  </div>
+
+  <div
+    className="absolute bottom-0 right-0 w-96 h-96 
+      dark:bg-white/5 bg-black/10 
+      rounded-full blur-3xl animate-pulse-slow"
+    style={{ animationDelay: "2s" }}
+  ></div>
+
+  <div
+    className={`relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center z-10 ${
+      isVisible["cta"] ? "animate-scale-in" : "opacity-100 scale-100"
+    }`}
+  >
+    <div className="inline-flex items-center gap-2 px-4 py-2 mb-6 
+        dark:bg-white/10 bg-black/10 
+        backdrop-blur-sm 
+        border dark:border-white/20 border-black/20 
+        rounded-full">
+      <Sparkles className="w-4 h-4 dark:text-white text-black animate-pulse" />
+      <span className="text-sm font-medium dark:text-white text-black">
+        Join Thousands of Developers
+      </span>
+    </div>
+
+    <h2 className="text-4xl md:text-5xl font-bold dark:text-white text-gray-900 mb-6">
+      Ready to Start Your Coding Journey?
+    </h2>
+
+    <p className="text-xl dark:text-white/90 text-gray-700 mb-10 max-w-2xl mx-auto">
+      Powerful features designed to enhance your coding experience and
+      accelerate your learning. Start coding today and unlock your potential.
+    </p>
+
+    {!user && (
+      <Link
+        to="/register"
+        className="group inline-flex items-center gap-2 px-10 py-5 
+          dark:bg-background bg-white 
+          dark:text-primary text-gray-900 
+          font-semibold rounded-lg 
+          hover:scale-105 transition-all duration-300 shadow-2xl hover:shadow-3xl text-lg"
+      >
+        Start Coding Now
+        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+      </Link>
+    )}
+  </div>
+</section>
+
     </div>
   );
 };
